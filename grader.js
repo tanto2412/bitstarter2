@@ -68,10 +68,24 @@ if(require.main == module) {
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
 	.option('-u, --url <url>', 'URL')
         .parse(process.argv);
-
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+    
+    if (program.url != undefined) {
+	rest.get(program.url).on('complete', function(result) {
+	    $ = cheerio.load(result);
+            var checks = loadChecks(program.checks).sort();
+            var out = {};
+            for(var ii in checks) {
+	    	var present = $(checks[ii]).length > 0;
+		out[checks[ii]] = present;
+            }
+            var outJson = JSON.stringify(out, null, 4);
+            console.log(outJson);
+	});
+    } else {
+        var checkJson = checkHtmlFile(program.file, program.checks);
+        var outJson = JSON.stringify(checkJson, null, 4);
+        console.log(outJson);
+    }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
